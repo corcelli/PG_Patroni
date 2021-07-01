@@ -1,0 +1,64 @@
+scope: postgres
+namespace: /pg_patroni_cluster
+name: pg_node1
+
+restapi:
+    listen: 192.168.155.101:8008
+    connect_address: 192.168.155.101:8008
+
+etcd:
+    host: 192.168.155.104:2379
+
+bootstrap:
+  dcs:
+    ttl: 120
+    loop_wait: 10
+    retry_timeout: 10
+    maximum_lag_on_failover: 1048576
+    postgresql:
+      use_pg_rewind: true
+      use_slots: true
+      parameters:
+        wal_level: replica
+        hot_standby: "on"
+        wal_keep_segments: 8
+        max_wal_senders: 5
+        max_replication_slots: 5
+        checkpoint_timeout: 30
+
+
+  initdb:
+  - encoding: UTF8
+  - data-checksums
+
+  pg_hba:
+  - host replication replicator 127.0.0.1/32 md5
+  - host replication replicator 192.168.0.0/16 md5
+  - host all all 0.0.0.0/0 md5
+
+  users:
+    admin:
+      password: admin
+      options:
+        - createrole
+        - createdb
+
+postgresql:
+  listen: 192.168.155.101:5432
+  connect_address: 192.168.155.101:5432
+  data_dir: /banco_de_dados/data13/
+  bin_dir: /usr/pgsql-13/bin
+  authentication:
+    replication:
+      username: replicator
+      password: Pass_replicator
+    superuser:
+      username: postgres
+      password: Pass_postgres
+
+tags:
+    nofailover: false
+    noloadbalance: false
+    clonefrom: false
+    nosync: false
+
